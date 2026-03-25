@@ -16,10 +16,6 @@ const upload = multer({
   }
 });
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'html');
-app.engine('html', require('fs').readFileSync.bind(null));  // handled via sendFile
-
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
 /**
