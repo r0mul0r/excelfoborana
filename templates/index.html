@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Procesador de Recargas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 40px 44px;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    .card h1 {
+      font-size: 1.5rem;
+      color: #1F4E79;
+      margin-bottom: 6px;
+    }
+
+    .card p.subtitle {
+      color: #64748b;
+      font-size: 0.92rem;
+      margin-bottom: 28px;
+    }
+
+    /* Formato esperado */
+    .format-hint {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      color: #1e40af;
+    }
+
+    .format-hint strong { display: block; margin-bottom: 8px; color: #1F4E79; }
+
+    .format-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .format-table th {
+      background: #1F4E79;
+      color: #fff;
+      padding: 5px 10px;
+      text-align: left;
+    }
+
+    .format-table td {
+      padding: 4px 10px;
+      border-bottom: 1px solid #BFDBFE;
+      color: #1e3a5f;
+    }
+
+    .format-table tr:last-child td { border-bottom: none; }
+
+    /* Drop zone */
+    .dropzone {
+      border: 2.5px dashed #2E75B6;
+      border-radius: 12px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      background: #f8fafc;
+      margin-bottom: 20px;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      background: #EFF6FF;
+      border-color: #1F4E79;
+    }
+
+    .dropzone .icon { font-size: 2.4rem; margin-bottom: 10px; }
+
+    .dropzone p {
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .dropzone p span {
+      color: #2E75B6;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .dropzone small {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      margin-top: 6px;
+    }
+
+    #file-input { display: none; }
+
+    /* Nombre del archivo seleccionado */
+    #file-name {
+      font-size: 0.88rem;
+      color: #1F4E79;
+      background: #EFF6FF;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #file-name .remove-btn {
+      margin-left: auto;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 1rem;
+      line-height: 1;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+
+    #file-name .remove-btn:hover { color: #ef4444; }
+
+    /* Botón */
+    .btn-procesar {
+      width: 100%;
+      padding: 13px;
+      background: #1F4E79;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-procesar:hover:not(:disabled) { background: #2E75B6; }
+    .btn-procesar:active:not(:disabled) { transform: scale(0.98); }
+    .btn-procesar:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Mensajes */
+    .msg {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .msg.error {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #991B1B;
+    }
+
+    .msg.success {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📊 Procesador de Recargas</h1>
+    <p class="subtitle">Sube tu Excel y obtén el resumen por usuario al instante.</p>
+
+    <div class="format-hint">
+      <strong>Formato esperado del archivo:</strong>
+      <table class="format-table">
+        <thead>
+          <tr><th>USUARIO</th><th>MONTO RECARGADO</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>juan123</td><td>10.000,00</td></tr>
+          <tr><td>maria456</td><td>5.500,50</td></tr>
+          <tr><td>juan123</td><td>2.000,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="icon">📁</div>
+      <p>Arrastrá tu archivo acá o <span id="browse-link">buscalo</span></p>
+      <small>Solo archivos .xlsx o .xls · Máx. 10 MB</small>
+    </div>
+
+    <input type="file" id="file-input" accept=".xlsx,.xls" />
+
+    <div id="file-name">
+      <span id="file-name-text"></span>
+      <button class="remove-btn" id="remove-file" title="Quitar archivo">✕</button>
+    </div>
+
+    <button class="btn-procesar" id="btn-procesar" disabled>
+      <div class="spinner" id="spinner"></div>
+      <span id="btn-text">Procesar Excel</span>
+    </button>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script>
+    const dropzone     = document.getElementById('dropzone');
+    const fileInput    = document.getElementById('file-input');
+    const browseLink   = document.getElementById('browse-link');
+    const fileNameEl   = document.getElementById('file-name');
+    const fileNameText = document.getElementById('file-name-text');
+    const removeBtn    = document.getElementById('remove-file');
+    const btnProcesar  = document.getElementById('btn-procesar');
+    const btnText      = document.getElementById('btn-text');
+    const spinner      = document.getElementById('spinner');
+    const msg          = document.getElementById('msg');
+
+    let selectedFile = null;
+
+    function setFile(file) {
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['xlsx', 'xls'].includes(ext)) {
+        showMsg('error', 'Solo se aceptan archivos .xlsx o .xls');
+        return;
+      }
+      selectedFile = file;
+      fileNameText.textContent = '📄 ' + file.name;
+      fileNameEl.style.display = 'flex';
+      btnProcesar.disabled = false;
+      hideMsg();
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      fileNameEl.style.display = 'none';
+      btnProcesar.disabled = true;
+      hideMsg();
+    }
+
+    function showMsg(type, text) {
+      msg.className = 'msg ' + type;
+      msg.textContent = text;
+      msg.style.display = 'block';
+    }
+
+    function hideMsg() {
+      msg.style.display = 'none';
+    }
+
+    browseLink.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) setFile(fileInput.files[0]);
+    });
+
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearFile();
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      setFile(file);
+    });
+
+    btnProcesar.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      btnProcesar.disabled = true;
+      spinner.style.display = 'block';
+      btnText.textContent = 'Procesando...';
+      hideMsg();
+
+      const formData = new FormData();
+      formData.append('archivo', selectedFile);
+
+      try {
+        const response = await fetch('/procesar', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'resumen_recargas.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          showMsg('success', '✅ ¡Archivo procesado correctamente! La descarga comenzó.');
+        } else {
+          const data = await response.json();
+          showMsg('error', '❌ ' + (data.error || 'Error desconocido al procesar el archivo.'));
+        }
+      } catch (err) {
+        showMsg('error', '❌ Error de conexión. Verificá tu internet e intentá nuevamente.');
+      } finally {
+        btnProcesar.disabled = false;
+        spinner.style.display = 'none';
+        btnText.textContent = 'Procesar Excel';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Para hosting con cPanel + Passenger (Python App)
+# Si usas Apache con mod_wsgi, agrega la configuración en httpd.conf o en el panel.
+# Este archivo es solo de referencia.
+
+# Redirigir todo al app WSGI (si el hosting soporta mod_rewrite con Passenger)
+PassengerEnabled On
+PassengerAppRoot /home/tu_usuario/excelfoborana
+PassengerStartupFile wsgi.py
+PassengerPython /home/tu_usuario/virtualenv/excelfoborana/bin/python
