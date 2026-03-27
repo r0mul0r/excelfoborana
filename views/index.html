@@ -319,7 +319,8 @@
       formData.append('archivo', selectedFile);
 
       try {
-        const response = await fetch('/procesar', {
+        const base = window.location.href.replace(/\/+$/, '');
+        const response = await fetch(base + '/procesar', {
           method: 'POST',
           body: formData
         });

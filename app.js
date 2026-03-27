@@ -163,11 +163,13 @@ function buildOutputExcel(data) {
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 
-app.get('/', (_req, res) => {
+const BASE = '/excelfoborana';
+
+app.get(['/', BASE, BASE + '/'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
-app.post('/procesar', (req, res) => {
+app.post(['/procesar', BASE + '/procesar'], (req, res) => {
   upload.single('archivo')(req, res, (err) => {
     if (err) {
       const status = err.message.includes('Solo se aceptan') ? 400 : 413;
